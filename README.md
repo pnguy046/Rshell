@@ -8,7 +8,7 @@ For this code, we made a shell that would be able to use the simple commands of 
 
 ## Installation
 
-$ git clone https://github.com/yourusername/rshell.git
+$ git clone https://github.com/pnguy046/rshell.git
 
 $ cd rshell
 
