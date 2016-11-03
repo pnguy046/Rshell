@@ -1,4 +1,4 @@
-MAKE = g++ -Wall -Werror -ansi -pedantic src/main.cpp -o bin/rshell
+MAKE = g++ -Wall -Werror -ansi -pedantic src/rshell.cpp -o bin/rshell
 BIN = mkdir -p bin
 
 all:
