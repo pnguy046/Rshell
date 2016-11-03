@@ -11,7 +11,11 @@
 
 
 using namespace std;
-
+/*
+	In this, we have our rshell working
+	and our function declarations here
+*/
+void print();
 void exec(vector<string>&, bool&);
 void execute(vector<string>, bool&);
 void parseString(string, vector<string>&);
@@ -20,47 +24,70 @@ bool hasSemi(string s);
 bool hasHash(string s);
 bool isComparator(string s);
 
+
+
 int main(){
     string user_input = "";
     bool execStatus = true;
+    bool allSpace = true;
     vector<string> argsList;
     
     while (user_input != "exit") {
+        print();
         getline(cin, user_input);
+        //test for exit
         if(user_input == "exit") {
             exit(0);
         }
+        //test for empty string
+        else if(user_input.size() == 0) {
+            break;
+        }
+        //test for only white spaces
         else {
             argsList.clear();
-            parseString(user_input, argsList);
-            exec(argsList, execStatus);
+            for(unsigned i = 0; i < user_input.size(); i++) {
+                if(user_input.at(i) != ' ') {
+                    allSpace = false;
+                    break;
+                }
+            }
+            //the actual shell
+            if(!allSpace) { 
+                parseString(user_input, argsList);
+                exec(argsList, execStatus);
+            }
+            else{
+                break;
+            }
         }
     }
     return 0;
 }
-       
-
-void execute(vector<string> cmds, bool &execStatus) { //passed in command
-	cout << "enter executive: " << endl; //test
-	for(unsigned i = 0; i < cmds.size(); i++) {
-		cout << "<" << cmds.at(i) << "> ";
+//getting the command prompt to show       
+void print() {
+    char* user = getlogin();
+    char host[256]; 
+	gethostname(host, 128);
+	if (user == NULL) { 
+		cout << "$ ";
 	}
-	cout << endl;
-	
+	else {
+		cout << user << '@' << host << "$ ";
+	}
+}
+
+//here is where the forking and executables while be handled
+//passed in command
+void execute(vector<string> cmds, bool &execStatus) {
+
     if(cmds.size() > 1){
-    	cout << "enter edit: " << endl;
-		if (cmds.at(1).at(0) == '\"'||cmds.at(1).at(0) ==  '\'') { //fixes quotation marks for echo
-			cout << "echo change" << endl;
+    	//fixes quotation marks for echo
+		if (cmds.at(1).at(0) == '\"'||cmds.at(1).at(0) ==  '\'') { 
 			cmds.at(1).erase(cmds.at(1).begin());
-			cmds.at(cmds.size()-1).erase(cmds.at(cmds.size()-1).begin() + cmds.at(cmds.size()-1).size()-1);
+			cmds.at(cmds.size() - 1).erase(cmds.at(cmds.size() - 1).begin() + cmds.at(cmds.size() - 1).size() - 1);
 		}
 	}
-	
-	cout << "edited echo:" << endl; //test
-	for(unsigned i = 0; i < cmds.size(); i++) {
-		cout << "<" << cmds.at(i) << "> ";
-	}
-	cout << endl;
 	
     int i;
     char* argv[cmds.size() + 1];
@@ -68,13 +95,19 @@ void execute(vector<string> cmds, bool &execStatus) { //passed in command
 		argv[i] = (char*)cmds.at(i).c_str();	
 	}
 	argv[cmds.size()] = NULL;
-	char path[20] = "/bin/"; // starts at bin	
-	strcat(path, cmds[0].c_str()); // add the first command to the file path
+	// starts at bin
+	char path[20] = "/bin/"; 	
+	// add the first command to the file path
+	strcat(path, cmds[0].c_str()); 
     pid_t pid = fork();
-    if(pid >= 0){ //fork succeeded
-        if(pid == 0) { //child process
-            if (execvp(path, argv) < 0) {     /* execute the command  */
-              execStatus = false; //error execvp failed
+    //fork succeeded
+    if(pid >= 0){ 
+    	//child process
+        if(pid == 0) { 
+        	/* execute the command  */
+            if (execvp(path, argv) < 0) {     
+              execStatus = false;
+              //error execvp failed
               perror("execvp failed.\n");
               exit(-1);
           }
@@ -82,43 +115,41 @@ void execute(vector<string> cmds, bool &execStatus) { //passed in command
               execStatus = true;
           }
         }
-        else { //parent process
+        //parent process
+        else { 
             int status;
             waitpid(pid, &status, 0);
         }
     }
-    else { //fork failed
+    //fork failed
+    else { 
         execStatus = false;
         perror("fork failed\n");
-        exit(-1); //exit(errno)?
+        exit(-1);
     }
-    cout << "exit execute" << endl;
 }
 
 void exec(vector<string> &argsList, bool &execStatus) {
     vector<string> command;
     
-    cout << "enter exec" << endl; //test
-    for(unsigned i = 0; i < argsList.size(); i++) {
-		cout << "<" << argsList.at(i) << "> ";
-	}
-	cout << endl;
-	
-    for (unsigned i = 0; i < argsList.size(); i++) { //start where we left off, only executes when there is two connectors in between a command
+	//this will start when there are 2 commands
+    for (unsigned i = 0; i < argsList.size(); i++) { 
 		command.push_back(argsList.at(i));
+		//if there's more cmds and the next command is a comparator
 
-		/*if (hasHash(argsList.at(i))) { //if it is a comment, break out of the loop
-			break;
-		}*/
-		if(isComparator(argsList.at(i)) && command.size() > 1) { //if there's more cmds and the next command is a connector
-			if(command.at(1) == "#") { //handles comments after connector
+		if(isComparator(argsList.at(i)) && command.size() > 1) { 
+			//handles comments after comparator
+			if(command.at(1) == "#") { 
 					break;
 			}
-
+			
+			//include next comparator
 			if (command.at(0) == "&&") {
-				i--; //decrement i to include next connector
-				command.erase(command.begin()); //remove connector from command
-				command.pop_back(); //remove connector at the end
+				i--; 
+				//remove comparator from command
+				command.erase(command.begin()); 
+				//remove comparator at the end
+				command.pop_back(); 
 				if (execStatus == true) {
 					execute(command, execStatus);
 				}
@@ -127,38 +158,46 @@ void exec(vector<string> &argsList, bool &execStatus) {
 
 			else if(command.at(0)== ";") {
 				i--;
-				command.erase(command.begin()); //remove connector from command
-				command.pop_back(); //pop back twice
+				//remove comparator from command
+				command.erase(command.begin()); 
+				command.pop_back(); 
 				execute(command, execStatus);
 				command.clear();
 			}
 			else if(command.at(0) == "||") {
-				i--; //decrement i to include next connector
-				command.erase(command.begin()); //delete the connector
-				command.pop_back(); //remove connector at end of command
-				if (execStatus == false) { //if the previous command did not execute, run this command
+				 //include next comparator
+				i--;
+				//delete the comparator
+				command.erase(command.begin()); 
+				//remove comparator at end of command
+				command.pop_back(); 
+				//if the previous command did not execute, run this command
+				if (execStatus == false) { 
 					execute(command, execStatus);
 				}
 				command.clear();
 			}
 			else if(command.at(0) == "#" && command.size() == 1) {
 
-				break; //don't do anything if command has comments
+				break; 
 			}
 			else if(!isComparator(command.at(0))){
 				i--;
-				command.pop_back(); //remove the connector
+				//remove the comparator
+				command.pop_back(); 
 				execute(command, execStatus);
 				command.clear();
 			}
 		}
-		else if(i == argsList.size()-1) { //if this is the last command
-			if(isComparator(command.at(command.size()-1))) { //if there is a dangling connector at the end remove it
+		//last command
+		else if(i == argsList.size()-1) { 
+			if(isComparator(command.at(command.size()-1))) { 
 				command.pop_back();
 				break;
 			}
+			//delete comparator
 			if (command.size() != 0 && command.at(0) == "&&") {
-				command.erase(command.begin()); //delete connector
+				command.erase(command.begin()); 
 				if (execStatus == true) {
 					execute(command, execStatus);
 				}
@@ -183,7 +222,6 @@ void exec(vector<string> &argsList, bool &execStatus) {
 			}
 		}
 	}
-	cout << "exit exec" << endl; //test
 }
 
 bool isComparator(string s) {
@@ -220,8 +258,10 @@ void parseString(string userInput, vector<string>& argsList) {
 	//split command into separate strings
 	char* token; 
 	char* messagePointer = new char[userInput.length() + 1];
-	strcpy(messagePointer, userInput.c_str()); //converts string to char*
-	token = strtok(messagePointer, " "); //tokenize first part of string
+	//converts string to char*
+	strcpy(messagePointer, userInput.c_str());
+	//tokenize first part of string
+	token = strtok(messagePointer, " "); 
 
 	/*
 		This is where the parsing and check takes place for the rest
@@ -238,7 +278,7 @@ void parseString(string userInput, vector<string>& argsList) {
 			break;
 		}
 		string parsedString = string(token);
-		//if it a just a connector without any words attached  go straight to push_back
+		//if it a just a comparator without any words attached  go straight to push_back
 		if(!isComparator(parsedString)) { 
 		    //if there is a semicolon attached enter loop
 			if (hasSemiColon(parsedString)) {
@@ -270,20 +310,12 @@ void parseString(string userInput, vector<string>& argsList) {
 			}
 		token = strtok(NULL, " ");
 	}
-	// cout << "before: "; //test remove begin connector 
-	// for(unsigned i = 0; i < argsList.size(); i++) {
-	// 	cout << "<" << argsList.at(i) << "> ";
-	// }
-	// cout << endl;
+
 	while(isComparator(argsList.at(0))) {
 		argsList.erase(argsList.begin());
 	}
 	while(isComparator(argsList.at(argsList.size()-1))) {
 		argsList.pop_back();
 	}
-	// cout << "after: ";
-	// for(unsigned i = 0; i < argsList.size(); i++) {
-	// 	cout << "<" << argsList.at(i) << "> ";
-	// }
-	// cout << endl;
+
 }  
