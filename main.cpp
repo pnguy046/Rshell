@@ -40,36 +40,36 @@ int main(){
 }
        
 
-void execute(vector<string> commands, bool &execStatus) { //passed in command
+void execute(vector<string> cmds, bool &execStatus) { //passed in command
 	cout << "enter executive: " << endl; //test
-	for(unsigned i = 0; i < commands.size(); i++) {
-		cout << "<" << commands.at(i) << "> ";
+	for(unsigned i = 0; i < cmds.size(); i++) {
+		cout << "<" << cmds.at(i) << "> ";
 	}
 	cout << endl;
 	
-    if(commands.size() > 1){
+    if(cmds.size() > 1){
     	cout << "enter edit: " << endl;
-		if (commands.at(1).at(0) == '\"'||commands.at(1).at(0) ==  '\'') { //fixes quotation marks for echo
+		if (cmds.at(1).at(0) == '\"'||cmds.at(1).at(0) ==  '\'') { //fixes quotation marks for echo
 			cout << "echo change" << endl;
-			commands.at(1).erase(commands.at(1).begin());
-			commands.at(commands.size()-1).erase(commands.at(commands.size()-1).begin() + commands.at(commands.size()-1).size()-1);
+			cmds.at(1).erase(cmds.at(1).begin());
+			cmds.at(cmds.size()-1).erase(cmds.at(cmds.size()-1).begin() + cmds.at(cmds.size()-1).size()-1);
 		}
 	}
 	
 	cout << "edited echo:" << endl; //test
-	for(unsigned i = 0; i < commands.size(); i++) {
-		cout << "<" << commands.at(i) << "> ";
+	for(unsigned i = 0; i < cmds.size(); i++) {
+		cout << "<" << cmds.at(i) << "> ";
 	}
 	cout << endl;
 	
     int i;
-    char* argv[commands.size() + 1];
-    for (i = 0; i < static_cast<int>(commands.size()); i++) { //convert the vector into a char* array for execvp
-		argv[i] = (char*)commands.at(i).c_str();	
+    char* argv[cmds.size() + 1];
+    for (i = 0; i < static_cast<int>(cmds.size()); i++) { //convert the vector into a char* array for execvp
+		argv[i] = (char*)cmds.at(i).c_str();	
 	}
-	argv[commands.size()] = NULL;
+	argv[cmds.size()] = NULL;
 	char path[20] = "/bin/"; // starts at bin	
-	strcat(path, commands[0].c_str()); // add the first command to the file path
+	strcat(path, cmds[0].c_str()); // add the first command to the file path
     pid_t pid = fork();
     if(pid >= 0){ //fork succeeded
         if(pid == 0) { //child process
@@ -96,7 +96,7 @@ void execute(vector<string> commands, bool &execStatus) { //passed in command
 }
 
 void exec(vector<string> &argsList, bool &execStatus) {
-    vector<string> currCommand;
+    vector<string> command;
     
     cout << "enter exec" << endl; //test
     for(unsigned i = 0; i < argsList.size(); i++) {
@@ -104,100 +104,84 @@ void exec(vector<string> &argsList, bool &execStatus) {
 	}
 	cout << endl;
 	
-    for(unsigned i = 0; i+1 < argsList.size(); i++) {
-        currCommand.push_back(argsList.at(i));
-        if(isComparator(currCommand.at(i)) && currCommand.size() > 1) {
-        	cout << "num i: " << i << endl;
-            if(currCommand.at(1) == "#" || currCommand.at(0) == "#") {
-            	cout << "1" << endl;
-                break;
-            }
-            else if(currCommand.at(0) == ";") {
-                i--;     // to include next connector
-                cout << "2" << endl;
-				currCommand.erase(currCommand.begin());  //delete the connector
-				currCommand.pop_back(); //remove connector at end of command
-				execute(currCommand, execStatus);
-				currCommand.clear();
-            }
-            else if(currCommand.at(0) == "&&") {
-                i--;     // to include next connector
-                cout << "3" << endl;
-				currCommand.erase(currCommand.begin());  //delete the connector
-				currCommand.pop_back(); //remove connector at end of command
-				if(execStatus == true) {
-				    execute(currCommand, execStatus);
-				}
-				currCommand.clear();
-            }
-            else if(currCommand.at(0) == "||") {
-                i--;     // to include next connector
-                cout << "4" << endl;
-				currCommand.erase(currCommand.begin());  //delete the connector
-				currCommand.pop_back(); //remove connector at end of command
-				if(execStatus == false) {
-				    execute(currCommand, execStatus);
-				}
-				currCommand.clear();
-            }
-            else if(!isComparator(currCommand.at(0))){  //first command
-            	cout << "5" << endl;
-                i--;     // to include next connector
-				currCommand.pop_back(); //remove connector at end of command
-				execute(currCommand, execStatus);
-				cout << "return from execute" << endl;
-				currCommand.clear();
-				// cout << "cleared" << endl;
-				cout << "num i after: " << i << endl;
-            }
-        }
-        else if(i+1 == argsList.size()) { //if this is the last command
-        	cout << "single/last command" << endl;
-        	cout << "num i: " << i << endl;
-			if(isComparator(currCommand.at(currCommand.size()-1))) { //if there is a dangling connector at the end remove it
-				currCommand.pop_back();
-				break;
+    for (unsigned i = 0; i < argsList.size(); i++) { //start where we left off, only executes when there is two connectors in between a command
+		command.push_back(argsList.at(i));
+
+		/*if (hasHash(argsList.at(i))) { //if it is a comment, break out of the loop
+			break;
+		}*/
+		if(isComparator(argsList.at(i)) && command.size() > 1) { //if there's more cmds and the next command is a connector
+			if(command.at(1) == "#") { //handles comments after connector
+					break;
 			}
-			else if(isComment(currCommand.at(1)) || isComment(currCommand.at(0))) {
-                break;
-            }
-            else if(currCommand.at(0) == ";") {
-                i--;     // to include next connector
-				currCommand.erase(currCommand.begin());  //delete the connector
-				currCommand.pop_back(); //remove connector at end of command
-				execute(currCommand, execStatus);
-				currCommand.clear();
-            }
-            else if(currCommand.at(0) == "&&") {
-                i--;     // to include next connector
-				currCommand.erase(currCommand.begin());  //delete the connector
-				currCommand.pop_back(); //remove connector at end of command
-				if(execStatus == true) {
-				    execute(currCommand, execStatus);
+
+			if (command.at(0) == "&&") {
+				i--; //decrement i to include next connector
+				command.erase(command.begin()); //remove connector from command
+				command.pop_back(); //remove connector at the end
+				if (execStatus == true) {
+					execute(command, execStatus);
 				}
-				currCommand.clear();
-            }
-            else if(currCommand.at(0) == "||") {
-                i--;     // to include next connector
-				currCommand.erase(currCommand.begin());  //delete the connector
-				currCommand.pop_back(); //remove connector at end of command
-				if(execStatus == false) {
-				    execute(currCommand, execStatus);
+				command.clear();
+			}
+
+			else if(command.at(0)== ";") {
+				i--;
+				command.erase(command.begin()); //remove connector from command
+				command.pop_back(); //pop back twice
+				execute(command, execStatus);
+				command.clear();
+			}
+			else if(command.at(0) == "||") {
+				i--; //decrement i to include next connector
+				command.erase(command.begin()); //delete the connector
+				command.pop_back(); //remove connector at end of command
+				if (execStatus == false) { //if the previous command did not execute, run this command
+					execute(command, execStatus);
 				}
-				currCommand.clear();
-            }
-            else if(!isComparator(currCommand.at(0))){  //single command
-            	cout << "10" << endl;
-                i--;     // to include next connector
-				// currCommand.pop_back(); //remove connector at end of command
-				execute(currCommand, execStatus);
-				currCommand.clear();
-				cout << "num i after: " << i << endl;
-            }
-            else if(currCommand.at(0) == "#" && currCommand.size() == 1) {
+				command.clear();
+			}
+			else if(command.at(0) == "#" && command.size() == 1) {
+
 				break; //don't do anything if command has comments
 			}
-    	}
+			else if(!isComparator(command.at(0))){
+				i--;
+				command.pop_back(); //remove the connector
+				execute(command, execStatus);
+				command.clear();
+			}
+		}
+		else if(i == argsList.size()-1) { //if this is the last command
+			if(isComparator(command.at(command.size()-1))) { //if there is a dangling connector at the end remove it
+				command.pop_back();
+				break;
+			}
+			if (command.size() != 0 && command.at(0) == "&&") {
+				command.erase(command.begin()); //delete connector
+				if (execStatus == true) {
+					execute(command, execStatus);
+				}
+			}
+			else if (command.size() != 0 && command.at(0) == "||") {
+				command.erase(command.begin());
+				if (execStatus == false) {
+					execute(command, execStatus);
+				}
+			}
+			else if (command.size() != 0 && command.at(0) == ";") {
+				command.erase(command.begin());
+				execute(command, execStatus);
+				break;
+			}
+			else if (command.size() != 0 && command.at(0) == "#") {
+				command.erase(command.begin());
+				return;
+			}
+			else {
+				execute(command, execStatus);
+			}
+		}
 	}
 	cout << "exit exec" << endl; //test
 }
