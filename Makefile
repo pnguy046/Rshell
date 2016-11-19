@@ -1,12 +1,17 @@
-MAKE = g++ -Wall -Werror -ansi -pedantic src/rshell.cpp -o bin/rshell
-BIN = mkdir -p bin
+CC=g++
+CC_FLAGS=-Wall -ansi
+EXEC=test.out
+SOURCES=$(wildcard *.cpp)
+BIN = mkdir -p bin src/rshell.cpp bin/rshell
+OBJECTS=$(SOURCES:.cpp=.o)
 
-all:
+$(EXEC): $(OBJECTS)
+	$(CC) $(OBJECTS) -o $(EXEC)
 	$(BIN)
-	$(MAKE)
-rshell:
-	$(BIN)
-	$(MAKE)
+
+%.o: %.cpp
+	$(CC) -c $(CC_FLAGS) $< -o $@
+
 clean:
-	rm bin/rshell
+	rm -f $(EXEC) $(OBJECTS)
 	rm -rf bin
