@@ -28,7 +28,7 @@ char* Execute::getDirectory(string s) { //get path for cd forward directory
 } 
 
 bool Execute::execCD(vector<string>cmds) {
-	getcwd(cwd, sizeof(cwd)); //set cwd
+    getcwd(cwd, sizeof(cwd)); //set cwd
     char* currentDir = cwd; //set current directory
     
  
@@ -41,9 +41,7 @@ bool Execute::execCD(vector<string>cmds) {
         	strcat(fullPath, newDir);
         	
     		setenv("PWD", fullPath, 1); //chdir worked, set pwd
-        	//////
-        	setenv("OLDPWD", currentDir, 1); //set oldpwd
-        	
+        	setenv("OLDPWD", currentDir, 1); //set oldpwd        	
         	return true;
         	
         }
@@ -55,9 +53,7 @@ bool Execute::execCD(vector<string>cmds) {
     else if(cmds.size() == 1) { //check cd home directory
         if(chdir(getenv("HOME")) == 0) { //if chdir work 
         	setenv("PWD", getenv("HOME"), 1); //chdir worked, set pwd
-        	/////////
-        	setenv("OLDPWD", currentDir, 1); //set oldpwd
-        	
+        	setenv("OLDPWD", currentDir, 1); //set oldpwd       	
         	return true;
         }
         else { //if chdir doesn't work
@@ -69,8 +65,6 @@ bool Execute::execCD(vector<string>cmds) {
     
         if(chdir(getenv("OLDPWD")) == 0) { //if chdir work   
         	setenv("PWD", getenv("OLDPWD"), 1); //chdir worked, set pwd
-        	/////
-        	
         	return true;
         }
         else { //if chdir doesn't work
@@ -149,8 +143,6 @@ bool Execute::execTest(vector<string>cmds){
 	else {
 			hasFlag = true;
 	}
-	
-	
 	
 	if( cmds.at(1) == "-e" || !hasFlag ){ //does test -e or test with no specifications
 		// cout << "-e or none" << endl;
@@ -356,7 +348,7 @@ void Parse::print() {
 }
 
 bool Parse::hasOpenParenthesis(string s){ //checks for '('
-
+	
 	if(s.at(0) == '(') {
 		return true; //return position of semi
 	}
